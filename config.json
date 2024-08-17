@@ -1,0 +1,14 @@
+{
+    "commonRoot": "../../../../",
+    "projectPaths": [
+        "testproject/testproject.csproj",
+        "testproject2/testproject2.csproj"
+    ],
+    "overrides": [
+        {
+        "packageId": "System.Formats.Asn1",
+        "oldVersions": ["8.0.0"],
+        "newVersion": "8.0.1"
+        }
+    ]
+}
