@@ -18,6 +18,9 @@ The only real fix for this is for you to override these transitive dependencies 
     - The `config.json` **must** be in the same directory as the executable
 3. Run the tool either by building it and running the executable directly, or run the project using `dotnet run`
 
+## Additional CLI parameters
+
+- `--no-restore` - When present, prevents `dotnet restore` being run for each project (a restore is needed for `dotnet list` to work correctly in case project packages have changed since last restore)
 
 ## Contributions
 Contributions are always welcome.  
