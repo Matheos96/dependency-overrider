@@ -1,5 +1,6 @@
 # Dependency Overrider for .NET
-_A simple CLI tool for overriding transitive .NET dependency versions._
+_A simple CLI tool for overriding transitive .NET dependency versions._  
+_Inspired by a tool by [@hoerup](https://github.com/hoerup) mentioned in [this issue](https://github.com/dotnet/runtime/issues/105028#issuecomment-2277941066)._
 
 ## What is it
 This tool is mainly meant to be used in CI/CD integrations where you may want to override the versions of certain transitive dependencies **manually** before building/publishing your application. This keeps the project files under source control free from manual transitive dependency version override clutter, which also need to be maintained in the long run
