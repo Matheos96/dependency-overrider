@@ -15,6 +15,9 @@ The only real fix for this is for you to override these transitive dependencies 
 2. Configure `config.json` to your needs. 
     - `commonRoot` is relative to the executable. 
     - `commonRoot` is prepended to the project paths in `projectPaths`.
+    - The `"reason"` and `"framework"` properties for override objects are optional.
+        - The reason will be printed if given
+        - The framework will be used to for filtering if present. If omitted, the override will be applied to all frameworks (for projects with multiple target framworks)
     - The `config.json` **must** be in the same directory as the executable
 3. Run the tool either by building it and running the executable directly, or run the project using `dotnet run`
 
