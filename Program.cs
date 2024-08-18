@@ -10,7 +10,6 @@ if (!Dotnet.IsInstalled())
 
 var assemblyDir = AppContext.BaseDirectory;
 var configFilePath = Path.Combine(assemblyDir, "config.json");
-var runRestore = !args.Contains("--no-restore");
 Config? config;
 try
 {
@@ -37,10 +36,11 @@ var overridesDict = config.Overrides.Where(o => o.IsValid).ToDictionary(o => o.P
 if (overridesDict is null || overridesDict.Count == 0) 
 {
 	Console.WriteLine("Config contains no overrides. Nothing to do. Exiting...");
-	return 0;
+	return 0; // Successful run, we just did not need to do anything
 }
 
 // Loop through all projects to handle
+var runRestore = !args.Contains("--no-restore");
 var commonRoot = Path.Combine(assemblyDir, config.CommonRoot);
 foreach (var path in config.ProjectPaths) 
 {
@@ -55,6 +55,8 @@ foreach (var path in config.ProjectPaths)
 		Console.Error.WriteLine($"Could not deserialize dotnet list output.. Skipping project {targetProjectPath}");
 		continue;
 	}
+	
+	// If dotnet list returned problems, print them and skip this project
 	if (packageList.HasProblems)
 	{
 		Console.Error.WriteLine($"Encountered problems with dotnet list for {targetProjectPath}:");
@@ -86,4 +88,5 @@ foreach (var path in config.ProjectPaths)
 		}
 	}
 }
+
 return 0;
