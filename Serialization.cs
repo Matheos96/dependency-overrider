@@ -12,7 +12,7 @@ internal static class Serialization
 // DTOs
 
 internal record Config(string CommonRoot, string[] ProjectPaths, Override[] Overrides);
-internal record Override(string PackageId, HashSet<string> OldVersions, string NewVersion, string? Reason)
+internal record Override(string PackageId, HashSet<string> OldVersions, string NewVersion, string? Framework, string? Reason)
 {
 	internal bool IsValid => !string.IsNullOrWhiteSpace(PackageId) && OldVersions.Count > 0 && !string.IsNullOrWhiteSpace(NewVersion);
 }

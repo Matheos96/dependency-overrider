@@ -74,7 +74,8 @@ foreach (var path in config.ProjectPaths)
 			{
 				// If there is no matching entry in the overrides dict, there is nothing to do
 				if (!overridesDict.TryGetValue(package.Id, out var @override) 
-					|| !@override.OldVersions.Contains(package.ResolvedVersion)) continue;
+					|| !@override.OldVersions.Contains(package.ResolvedVersion)
+					|| (@override.Framework is not null && @override.Framework != framework.Framework)) continue; // consider framework if present
 
 				// dotnet add package
 				Dotnet.AddPackage(project.Path, package.Id, @override.NewVersion);

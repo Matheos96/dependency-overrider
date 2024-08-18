@@ -9,6 +9,7 @@
         "packageId": "System.Formats.Asn1",
         "oldVersions": ["8.0.0"],
         "newVersion": "8.0.1",
+        "framework": "net8.0",
         "reason": "CVE-2024-38095" 
         }
     ]
