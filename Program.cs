@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text.Json;
+﻿using System.Text.Json;
 using dependency_overrider;
 
 // Ensure dotnet CLI is installed
@@ -58,7 +57,8 @@ var overrides = overridesElement.EnumerateArray()
 
 config.Dispose(); //Manually dispose the config JsonDocument already as it is no longer needed
 
-if (overrides is null || overrides.Count == 0) {
+if (overrides is null || overrides.Count == 0) 
+{
 	Console.WriteLine("Config contains no overrides. Nothing to do. Exiting...");
 	return;
 }
@@ -105,12 +105,10 @@ foreach (var targetProjectPath in targetProjectPaths)
 	}
 }
 
-internal record Override {
-	public required string PackageId { get; init; }
-	public required HashSet<string> OldVersions { get; init; }
-	public required string NewVersion { get; init; }
+internal record Override(string PackageId, HashSet<string> OldVersions, string NewVersion) 
+{
 	internal bool IsEmpty => this == Empty;
-	internal static readonly Override Empty = new() { PackageId = "", OldVersions = [], NewVersion = "" };
+	internal static readonly Override Empty = new(string.Empty, [], string.Empty);
 }
 
 internal static class Extensions {
@@ -122,11 +120,6 @@ internal static class Extensions {
 			return Override.Empty;
 		}
 
-		return new Override
-		{
-			PackageId = packageId,
-			OldVersions = oldVersions,
-			NewVersion = newVersion
-		};
+		return new Override(packageId, oldVersions, newVersion);
 	}
 }
