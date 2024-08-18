@@ -5,7 +5,7 @@ using dependency_overrider;
 if (!Dotnet.IsInstalled()) 
 {
 	Console.Error.WriteLine($"dotnet CLI is not installed or not in PATH. Please install it or configure your PATH.");
-	return;
+	return 1;
 }
 
 var assemblyDir = AppContext.BaseDirectory;
@@ -19,17 +19,17 @@ try
 catch (FileNotFoundException)
 {
 	Console.Error.WriteLine($"{configFilePath} was not found!");
-	return;
+	return 1;
 }
 catch (JsonException)
 {
 	Console.Error.WriteLine($"{configFilePath} is not a valid JSON file!");
-	return;
+	return 1;
 }
 if (config is null) 
 {
 	Console.Error.WriteLine($"There was an issue reading and/or parsing {configFilePath}!");
-	return;
+	return 1;
 }
 
 // Only consider valid overrides and create dictionary for easy lookup
@@ -37,7 +37,7 @@ var overridesDict = config.Overrides.Where(o => o.IsValid).ToDictionary(o => o.P
 if (overridesDict is null || overridesDict.Count == 0) 
 {
 	Console.WriteLine("Config contains no overrides. Nothing to do. Exiting...");
-	return;
+	return 0;
 }
 
 // Loop through all projects to handle
@@ -49,37 +49,40 @@ foreach (var path in config.ProjectPaths)
 
 	// dotnet list ... package
 	var listJsonStr = Dotnet.List(targetProjectPath);
-
-	// Parse dotnet list standard output JSON to JsonDocument
-	using var dotnetList = JsonDocument.Parse(listJsonStr);
-	var dotnetListElement = dotnetList.RootElement;
-	if (!dotnetListElement.TryGetProperty("projects", out var listProjects)) continue; // Skip if somehow there are no projects...
-	if (dotnetListElement.TryGetProperty("problems", out var problems)) 
+	var packageList = Serialization.Deserialize<PackageList>(listJsonStr);
+	if (packageList is null) 
 	{
-		foreach (var problem in problems.EnumerateArray())
-		{
-			Console.Error.WriteLine($"Problem occurred: {problem.GetProperty("text").GetString()}.\nSkipping...");
-			continue;
-		}
+		Console.Error.WriteLine($"Could not deserialize dotnet list output.. Skipping project {targetProjectPath}");
+		continue;
+	}
+	if (packageList.HasProblems)
+	{
+		Console.Error.WriteLine($"Encountered problems with dotnet list for {targetProjectPath}:");
+		foreach (var problem in packageList.Problems!) Console.Error.WriteLine($"    - {problem.Text}");
+		Console.Error.WriteLine("Skipping...");
+		continue;
 	}
 
-	foreach (var project in listProjects.EnumerateArray())
+	// Loop over all projects (if the target was a solution, there could be multiple)
+	foreach (var project in packageList.Projects.Where(p => p.IsValid))
 	{
-		if (!project.TryGetProperty("path", out var projectPathProp) || projectPathProp.GetString() is not { } projectPath) continue;
-		if (!project.TryGetProperty("frameworks", out var frameworksProp)) continue;
-		foreach (var framework in frameworksProp.EnumerateArray())
+		// Loop over all frameworks (Framworks is not null has project is valid)
+		foreach (var framework in project.Frameworks!.Where(f => f.HasTransitivePackages))
 		{
-			if (!framework.TryGetProperty("transitivePackages", out var transPackProp)) continue;
-			foreach (var transPackage in transPackProp.EnumerateArray())
+			// Loop over all transitive packages (TransitivePackages is not null as framework is valid)
+			foreach (var package in framework.TransitivePackages!.Where(p => p.IsValid))
 			{
-				if (!transPackage.TryGetProperty("id", out var packageIdProp) || packageIdProp.GetString() is not { } packageId) continue;
-				if (!transPackage.TryGetProperty("resolvedVersion", out var resVerProp) || resVerProp.GetString() is not { } resolvedVersion) continue;
-				if (!overridesDict.TryGetValue(packageId, out var overrideObj) || !overrideObj.OldVersions.Contains(resolvedVersion)) continue;
+				// If there is no matching entry in the overrides dict, there is nothing to do
+				if (!overridesDict.TryGetValue(package.Id, out var @override) 
+					|| !@override.OldVersions.Contains(package.ResolvedVersion)) continue;
 
 				// dotnet add package
-				Dotnet.AddPackage(projectPath, packageId, overrideObj.NewVersion);
-				Console.WriteLine($"Added a direct dependency to {projectPath} for package {packageId}:{overrideObj.NewVersion} overriding version {resolvedVersion}");
+				Dotnet.AddPackage(project.Path, package.Id, @override.NewVersion);
+				Console.WriteLine($"Added a direct dependency to {project.Path} for package "
+				+ $"{package.Id}:{@override.NewVersion} overriding version {package.ResolvedVersion} "
+				+ (!string.IsNullOrWhiteSpace(@override.Reason) ? $"to remedy {@override.Reason}" : string.Empty));
 			}
 		}
 	}
 }
+return 0;
