@@ -107,7 +107,7 @@ foreach (var targetProjectPath in targetProjectPaths)
 static bool DotnetIsInstalled()
 {
     try {
-        var dotnet = new Process { StartInfo = new ProcessStartInfo { FileName = "dotnet.exe", RedirectStandardOutput = true } };
+        var dotnet = new Process { StartInfo = new ProcessStartInfo { FileName = "dotnet", RedirectStandardOutput = true } };
         dotnet.Start();
         dotnet.WaitForExit();
         return true;
@@ -124,7 +124,7 @@ static void DotnetRestore(string projectPath)
     {
         StartInfo = new ProcessStartInfo
         {
-            FileName = "dotnet.exe",
+            FileName = "dotnet",
             Arguments = $"restore {projectPath}",
             RedirectStandardOutput = true, // Don't output to console
         }
@@ -140,7 +140,7 @@ static string DotnetList(string projectPath)
     {
         StartInfo = new ProcessStartInfo
         {
-            FileName = "dotnet.exe",
+            FileName = "dotnet",
             Arguments = $"list {projectPath} package --include-transitive --format json",
             RedirectStandardOutput = true,
         }
@@ -157,7 +157,7 @@ static void DotnetAddPackage(string projectPath, string packageId, string newVer
     {
         StartInfo = new ProcessStartInfo
         {
-            FileName = "dotnet.exe",
+            FileName = "dotnet",
             Arguments = $"add {projectPath} package {packageId} -v {newVersion}",
             RedirectStandardOutput = true // Don't output to console
         }
